@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto" data-accent="teal" data-font-size="medium" data-animations="on">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vignesh - HR AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #111827;
+            --sidebar-text-secondary: #6b7280;
+            --hover-bg: #f3f4f6;
+            --accent-color: #00C2A8;
+            --accent-text: #ffffff;
+            --user-message-bg: #00C2A8;
+            --bot-message-bg: #f3f4f6;
+        }
+
+        html[data-theme='dark'] {
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --sidebar-bg: #0B0F19;
+            --sidebar-text: #f3f4f6;
+            --sidebar-text-secondary: #9ca3af;
+            --hover-bg: #1f2937;
+            --bot-message-bg: #374151;
+        }
+
+        html[data-accent='purple'] { --accent-color: #8b5cf6; --user-message-bg: #8b5cf6; }
+        html[data-accent='blue'] { --accent-color: #3b82f6; --user-message-bg: #3b82f6; }
+        html[data-font-size='small'] { font-size: 14px; }
+        html[data-font-size='large'] { font-size: 18px; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            padding: 1rem 1.5rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 101;
+            background-color: var(--sidebar-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .page-header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .menu-toggle-btn {
+            position: absolute; 
+            right: 1.5rem; 
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .hamburger-icon {
+            width: 24px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hamburger-icon .line {
+            width: 100%;
+            height: 3px;
+            background-color: var(--text-primary);
+            border-radius: 2px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        .menu-toggle-btn.open .line-1 { transform: translateY(8px) rotate(45deg); }
+        .menu-toggle-btn.open .line-2 { opacity: 0; }
+        .menu-toggle-btn.open .line-3 { transform: translateY(-9px) rotate(-45deg); }
+
+        .menu-label { font-size: 1rem; font-weight: 500; }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            color: var(--sidebar-text);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); margin-bottom: 2.5rem; padding-top: 3.5rem;}
+
+        .sidebar-nav { list-style: none; flex-grow: 1; }
+
+        .sidebar-nav a {
+            display: block;
+            text-decoration: none;
+            color: var(--sidebar-text-secondary);
+            font-weight: 500;
+            padding: 1rem;
+            border-radius: 6px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar-nav a:hover { background-color: var(--hover-bg); color: var(--sidebar-text); }
+        .sidebar-nav a.active { background-color: var(--accent-color); color: var(--accent-text); }
+
+        .content-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            z-index: 99;
+        }
+
+        .content-overlay.open { opacity: 1; visibility: visible; }
+
+        main {
+            padding: 2rem;
+            margin-top: 80px; 
+            height: calc(100dvh - 80px);
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .view { display: none; flex-direction: column; flex: 1; }
+        .view.active { display: flex; }
+
+        .messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 1rem; }
+        .message { padding: 0.75rem 1rem; max-width: 80%; line-height: 1.6; word-wrap: break-word; }
+        .message.user { align-self: flex-end; background-color: var(--user-message-bg); color: var(--accent-text); }
+        .message.bot { align-self: flex-start; background-color: var(--bot-message-bg); color: var(--text-primary); }
+        .messages[data-message-style='rounded'] .message { border-radius: 12px; }
+        .messages[data-message-style='rounded'] .message.user { border-bottom-right-radius: 4px; }
+        .messages[data-message-style='rounded'] .message.bot { border-bottom-left-radius: 4px; }
+        .messages[data-message-style='square'] .message { border-radius: 4px; }
+
+        html[data-animations='on'] .message { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .thinking { align-self: flex-start; color: var(--text-secondary); font-style: italic; }
+
+                :root {
+        --accent-color: #00c4a7; /* Teal color */
+        --accent-text: #ffffff;
+        --border-color: #e0e0e0;
+        --card-bg: #ffffff;
+        --text-primary: #555555;
+        --background-color: #f7f9fb;
+        }
+
+        /* Overall layout */
+        body {
+        margin: 0;
+        background-color: var(--background-color);
+        font-family: 'Segoe UI', sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        }
+
+        /* Chat container */
+        .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        }
+
+        /* Chat messages area */
+        .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        }
+
+        /* Input area fixed to bottom */
+        .input-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        background-color: var(--background-color);
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Input styling */
+        .input-area input {
+        flex: 1;
+        border: 1px solid var(--border-color);
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        border-radius: 30px;
+        padding: 0.9rem 1.25rem;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
+        }
+
+        .input-area input:focus {
+        border-color: var(--accent-color);
+        }
+
+        /* Send button */
+        .input-area button {
+        background-color: var(--accent-color);
+        color: var(--accent-text);
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background-color 0.2s;
+        }
+
+        .input-area button:hover {
+        background-color: #00b198;
+        }
+
+        .settings-container { display: flex; flex-direction: column; gap: 1.5rem; }
+        .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .setting-item label { font-weight: 500; }
+        .setting-item select, .setting-item input[type='checkbox'] { padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-primary); }
+
+        .auth-buttons { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+        .auth-buttons button { background-color: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); width: 100%; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .auth-buttons button:hover { background-color: var(--accent-color); color: var(--accent-text); }
+
+        .auth-form { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; margin: auto; }
+        .auth-form input { border: 1px solid var(--border-color); background-color: var(--card-bg); color: var(--text-primary); border-radius: 6px; padding: 0.75rem 1rem; font-size: 1rem; outline: none; }
+        .auth-form input:focus { border-color: var(--accent-color); }
+        .auth-form button { background-color: var(--accent-color); color: var(--accent-text); border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; }
+        
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+                margin-top: 70px;
+                 height: calc(100dvh - 70px);
+            }
+            .auth-form {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header {
+                padding: 0.75rem 1rem;
+            }
+            .page-header-title {
+                font-size: 1.1rem;
+            }
+            .sidebar {
+                width: 100%;
+            }
+            main {
+                padding: 0.75rem;
+                margin-top: 60px;
+                 height: calc(100dvh - 70px);
+            }
+            .input-area {
+                gap: 0.25rem;
+            }
+            .input-area input {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            .input-area button {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            .message {
+                max-width: 90%;
+            }
+            .auth-form {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-header-title">Vignesh - HR AI Assistant</h1>
+        <button class="menu-toggle-btn" aria-label="Toggle menu" aria-expanded="false">
+            <span class="menu-label"></span>
+            <span class="hamburger-icon">
+                <span class="line line-1"></span>
+                <span class="line line-2"></span>
+                <span class="line line-3"></span>
+            </span>
+        </button>
+    </div>
+    <aside class="sidebar" id="sidebar">
+        <h1 class="sidebar-header">Vignesh</h1>
+        <nav>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="nav-link active" data-view="chat">Chat</a></li>
+                <li><a href="#" class="nav-link" data-view="settings">Settings</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button id="login-btn" class="nav-link" data-view="login">Login</button>
+            <button id="signin-btn" class="nav-link" data-view="signin">Sign In</button>
+        </div>
+    </aside>
+    <div class="content-overlay" id="overlay"></div>
+    <main>
+        <div id="chat" class="view active">
+            <div class="messages" data-message-style="rounded"></div>
+            <div class="input-area">
+                <input type="text" id="chat-input" placeholder="Ask an HR question...">
+                <button id="send-button">&#10148;</button>
+            </div>
+        </div>
+        <div id="settings" class="view">
+            <div class="settings-container">
+                <div class="setting-item"><label for="theme-select">Theme</label><select id="theme-select"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+                <div class="setting-item"><label for="accent-select">Accent Color</label><select id="accent-select"><option value="teal">Teal</option><option value="purple">Purple</option><option value="blue">Blue</option></select></div>
+                <div class="setting-item"><label for="font-size-select">Font Size</label><select id="font-size-select"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></div>
+                <div class="setting-item"><label for="message-style-select">Message Style</label><select id="message-style-select"><option value="rounded">Rounded</option><option value="square">Square</option></select></div>
+                <div class="setting-item"><label for="sound-toggle">Message Sound</label><input type="checkbox" id="sound-toggle"></div>
+                <div class="setting-item"><label for="animation-toggle">Animations</label><input type="checkbox" id="animation-toggle"></div>
+            </div>
+        </div>
+        <div id="login" class="view">
+            <form class="auth-form" id="login-form">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        <div id="signin" class="view">
+            <form class="auth-form" id="signin-form">
+                <h2>Sign In</h2>
+                <input type="text" id="signin-name" placeholder="Full Name" required>
+                <input type="email" id="signin-email" placeholder="Email" required>
+                <input type="password" id="signin-password" placeholder="Password" required>
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+    </main>
+    <audio id="message-sound" src="https://actions.google.com/sounds/v1/basic_hits/primitive_upswipe.ogg" preload="auto"></audio>
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggleBtn = document.querySelector('.menu-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const messagesContainer = document.querySelector('.messages');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const views = document.querySelectorAll('.view');
+            const sound = document.getElementById('message-sound');
+            let thinkingIndicator;
+
+            const toggleSidebar = () => {
+                const isOpen = sidebar.classList.toggle('open');
+                menuToggleBtn.classList.toggle('open');
+                overlay.classList.toggle('open');
+                menuToggleBtn.setAttribute('aria-expanded', isOpen);
+            };
+
+            menuToggleBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+            document.addEventListener('keydown', (e) => e.key === 'Escape' && sidebar.classList.contains('open') && toggleSidebar());
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const view = link.getAttribute('data-view');
+                    navLinks.forEach(navLink => navLink.classList.remove('active'));
+                    link.classList.add('active');
+                    views.forEach(v => v.classList.remove('active'));
+                    document.getElementById(view).classList.add('active');
+                    if (sidebar.classList.contains('open')) { 
+                        toggleSidebar();
+                    }
+                });
+            });
+
+            const settings = {
+                theme: { el: document.getElementById('theme-select'), default: 'auto', apply: (val) => {
+                    let themeToApply = val;
+                    if (val === 'auto') {
+                        themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    }
+                    document.documentElement.setAttribute('data-theme', themeToApply);
+                }},
+                accent: { el: document.getElementById('accent-select'), default: 'teal', apply: (val) => document.documentElement.setAttribute('data-accent', val) },
+                fontSize: { el: document.getElementById('font-size-select'), default: 'medium', apply: (val) => document.documentElement.setAttribute('data-font-size', val) },
+                messageStyle: { el: document.getElementById('message-style-select'), default: 'rounded', apply: (val) => messagesContainer.setAttribute('data-message-style', val) },
+                sound: { el: document.getElementById('sound-toggle'), default: true, type: 'checkbox' },
+                animations: { el: document.getElementById('animation-toggle'), default: true, type: 'checkbox', apply: (val) => document.documentElement.setAttribute('data-animations', val ? 'on' : 'off') }
+            };
+
+            Object.keys(settings).forEach(key => {
+                const setting = settings[key];
+                const savedValue = localStorage.getItem(`setting-${key}`);
+                let value = setting.type === 'checkbox' ? (savedValue !== null ? JSON.parse(savedValue) : setting.default) : (savedValue || setting.default);
+                
+                if (setting.el) {
+                    if (setting.type === 'checkbox') setting.el.checked = value; else setting.el.value = value;
+                    if (setting.apply) setting.apply(value);
+
+                    setting.el.addEventListener('change', (e) => {
+                        const newValue = setting.type === 'checkbox' ? e.target.checked : e.target.value;
+                        localStorage.setItem(`setting-${key}`, newValue);
+                        if (setting.apply) setting.apply(newValue);
+                    });
+                }
+            });
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                const themeSetting = settings.theme;
+                if (localStorage.getItem('setting-theme') === 'auto' || !localStorage.getItem('setting-theme')) {
+                    themeSetting.apply('auto');
+                }
+            });
+
+            const GEMINI_API_KEY = 'AIzaSyCJHzatK259K03vMB208m6Fg79YoUYED5g';
+            const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const HR_BOT_SYSTEM_INSTRUCTION = `Identity: You are \"Vignesh,\" a friendly and helpful AI-powered HR assistant.\n\nCore Objective: Your primary goal is to assist company employees by providing accurate and clear information about HR-related topics and to serve as a friendly point of contact.\n\nBehavioral Rules & Tone Adjustment: You must adjust your communication style based on the user's query.\n\nCasual Conversation: If the user is making small talk, asking about your day, or speaking in a very informal, friendly manner (e.g., \"hey what's up,\" \"how are you\"), respond in a casual, warm, and friendly tone. Act like a helpful human colleague or friend.\n\nProfessional HR Inquiries: If the user asks a direct question about a specific HR topic, you must immediately switch to a professional, clear, and helpful tone. Your response should be structured, easy to understand, and factually accurate. The key HR topics you are an expert in are:\n- Benefits (health insurance, retirement plans, wellness programs)\n- Payroll (pay schedules, deductions, tax forms)\n- Leave Policy (vacation, sick leave, parental leave, holidays)\n- Company Culture & Events\n- Performance Reviews & Goal Setting\n- Onboarding Processes & New Hire Paperwork\n- Company Policies & Code of Conduct\n\nHandling Unknown Questions: If a user asks a question that you do not have the information for, or if it falls outside your designated HR scope, do not guess. Politely state that you don't have the answer and explain how they can contact a human HR representative for further assistance. For example: \"That's a great question, but I don't have the specific information for that. I'd recommend reaching out to the HR team directly at [HR email/contact] for the best answer.\"\n\nUniversal Tone Guidelines: Regardless of the mode (casual or professional), you must always be polite, clear, and ensure the information you provide is correct. Mirror the user's general level of formality when appropriate, but never be unprofessional.`;
+            const conversationHistory = [];
+
+            const addMessage = (text, sender) => {
+                if(thinkingIndicator) hideThinking();
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+                messageElement.innerHTML = text; // Using innerHTML to render potential markdown
+                messagesContainer.appendChild(messageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                if (sender === 'bot' && settings.sound.el.checked) sound.play();
+            };
+
+            const showThinking = () => {
+                thinkingIndicator = document.createElement('div');
+                thinkingIndicator.classList.add('message', 'bot', 'thinking');
+                thinkingIndicator.textContent = 'Vignesh is thinking...';
+                messagesContainer.appendChild(thinkingIndicator);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            };
+
+            const hideThinking = () => { if(thinkingIndicator) { thinkingIndicator.remove(); thinkingIndicator = null; } };
+            
+            const sendMessage = async () => {
+                const userInput = chatInput.value.trim();
+                if (!userInput) return;
+
+                addMessage(userInput, 'user');
+                conversationHistory.push({role: "user", parts: [{text: userInput}]});
+                chatInput.value = '';
+                showThinking();
+
+                try {
+                    const response = await fetch(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: conversationHistory, systemInstruction: { parts: [{ text: HR_BOT_SYSTEM_INSTRUCTION }] } })
+                    });
+                    if (!response.ok) {
+                         const errorData = await response.json();
+                         throw new Error(errorData.error.message);
+                    }
+                    const data = await response.json();
+                    const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (botResponse) {
+                        // A simple markdown to HTML conversion
+                        const formattedResponse = botResponse.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                        addMessage(formattedResponse, 'bot');
+                        conversationHistory.push({role: "model", parts: [{text: botResponse}]});
+                    } else {
+                         addMessage("Sorry, I couldn’t get a response.", 'bot');
+                    }
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    addMessage("There was an error connecting to the AI. Please check your API key and network.", 'bot');
+                } 
+            };
+
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keydown', (e) => e.key === 'Enter' && (e.preventDefault(), sendMessage()));
+
+            addMessage("Hello! I'm <b>Vignesh</b>, your HR assistant. How can I help you today?", 'bot');
+        });
+    </script>
+</body>
+</html>

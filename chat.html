@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Vignesh HR AI Assistant</title>
+    <link rel="stylesheet" href="chat_style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+             <div class="message bot loading-indicator" style="display: none;">
+                <div class="avatar">A</div>
+                <div class="text-content">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="chat-input" placeholder="Ask an HR question..." rows="1"></textarea>
+            <button id="send-button">&#10148;</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const messagesContainer = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const loadingIndicator = document.querySelector('.loading-indicator');
+
+            const addMessage = (text, sender) => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+
+                const avatar = document.createElement('div');
+                avatar.classList.add('avatar');
+                avatar.textContent = sender === 'user' ? 'U' : 'A';
+
+                const textContent = document.createElement('div');
+                textContent.classList.add('text-content');
+                textContent.textContent = text;
+                
+                messageElement.appendChild(avatar);
+                messageElement.appendChild(textContent);
+                messagesContainer.insertBefore(messageElement, loadingIndicator);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            };
+
+            const sendMessage = async () => {
+                const userInput = chatInput.value.trim();
+                if (!userInput) return;
+
+                addMessage(userInput, 'user');
+                chatInput.value = '';
+                autoExpand(); 
+                loadingIndicator.style.display = 'flex';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                // Placeholder for bot response
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    addMessage("This is a placeholder response from Vignesh.", 'bot');
+                }, 1000);
+            };
+
+            const autoExpand = () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = (chatInput.scrollHeight) + 'px';
+            };
+
+            sendButton.addEventListener('click', sendMessage);
+
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            chatInput.addEventListener('input', autoExpand);
+            
+            addMessage("Hello! I'm Vignesh, your HR assistant. How can I help you today?", 'bot');
+        });
+    </script>
+</body>
+</html>

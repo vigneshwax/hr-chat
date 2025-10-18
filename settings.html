@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-accent="teal" data-font-size="medium" data-animations="on">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Vignesh HR AI Assistant</title>
+    <link rel="stylesheet" href="chat_style.css">
+    <link rel="stylesheet" href="settings_style.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <nav>
+                <a href="chat.html">Chat</a>
+                <a href="settings.html" class="active">Settings</a>
+            </nav>
+        </aside>
+
+        <main class="content-area">
+            <header class="topbar"><h1>Settings</h1></header>
+            <div class="card">
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="api-key-input">Gemini API Key</label>
+                        <input type="password" id="api-key-input" placeholder="Enter your API key">
+                        <p>Your API key is stored locally and never sent to any server other than Google's.</p>
+                    </div>
+                    <button id="save-button">Save</button>
+                    <p id="save-message"></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKeyInput = document.getElementById('api-key-input');
+            const saveButton = document.getElementById('save-button');
+            const saveMessage = document.getElementById('save-message');
+
+            // Load the saved API key from local storage
+            const savedApiKey = localStorage.getItem('geminiApiKey');
+            if (savedApiKey) {
+                apiKeyInput.value = savedApiKey;
+            }
+
+            // Save the API key to local storage when the save button is clicked
+            saveButton.addEventListener('click', () => {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey) {
+                    localStorage.setItem('geminiApiKey', apiKey);
+                    saveMessage.textContent = 'API key saved successfully!';
+                    saveMessage.style.color = 'var(--accent-color)';
+                } else {
+                    saveMessage.textContent = 'Please enter an API key.';
+                    saveMessage.style.color = '#ef4444';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
